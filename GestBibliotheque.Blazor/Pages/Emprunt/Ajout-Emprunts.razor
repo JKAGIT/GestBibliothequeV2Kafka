@@ -1,0 +1,143 @@
+﻿@page "/Emprunt/Ajout-Emprunts"
+@inject HttpClient Http
+@using CommonLib.GestBibliotheque.Utilitaires
+@using GestBibliotheque.Blazor.Models
+@inject NavigationManager Navigation
+
+<h3 class="mb-3">Ajouter un emprunt</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+<EditForm Model="@emprunt" OnValidSubmit="AjouterEmprunt">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="usagerSelect" class="form-label">Sélectionner un usager</label>
+        <InputSelect id="usagerSelect" class="form-select" @bind-Value="selectedUsagerString">
+            <option value="">-- Sélectionner un usager --</option>
+            @foreach (var user in usagers)
+            {
+                <option value="@user.Id.ToString()">@($"{user.Nom} {user.Prenoms}")</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label for="livreSelect" class="form-label">Sélectionner un livre</label>
+        <InputSelect id="livreSelect" class="form-select" @bind-Value="selectedLivreString">
+            <option value="">-- Sélectionner un livre --</option>
+            @foreach (var livre in livres)
+            {
+                <option value="@livre.Id.ToString()">@livre.Titre</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label for="dateDebut" class="form-label">Date d'emprunt</label>
+        <InputDate id="dateDebut" @bind-Value="emprunt.DateDebut" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label for="dateRetourPrevue" class="form-label">Date de retour prévue</label>
+        <InputDate id="dateRetourPrevue" @bind-Value="emprunt.DateRetourPrevue" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Ajouter</button>
+</EditForm>
+
+@code {
+    private EmpruntDto emprunt = new EmpruntDto();
+
+    private string? Message;
+    private bool Success;
+
+    private List<UsagerDto> usagers = new();
+    private List<LivreDto> livres = new();
+
+    private string selectedUsagerString
+    {
+        get => emprunt.IDUsager.ToString();
+        set
+        {
+            if (Guid.TryParse(value, out var guidVal))
+                emprunt.IDUsager = guidVal;
+        }
+    }
+
+    private string selectedLivreString
+    {
+        get => emprunt.IDLivre.ToString();
+        set
+        {
+            if (Guid.TryParse(value, out var guidVal))
+                emprunt.IDLivre = guidVal;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        emprunt.DateDebut = DateTime.Today;
+        emprunt.DateRetourPrevue = DateTime.Today + TimeSpan.FromDays(14);
+
+        await ChargerUsagers();
+        await ChargerLivres();
+    }
+
+    private async Task ChargerUsagers()
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<UsagerDto>>("/api-bibliotheque/usagers");
+            usagers = result ?? new List<UsagerDto>();
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+    }
+
+    private async Task ChargerLivres()
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<LivreDto>>("/api-bibliotheque/livre");
+            livres = result?.Where(l => l.Stock > 0).ToList() ?? new List<LivreDto>();
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+    }
+
+    private async Task AjouterEmprunt()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api-bibliotheque/emprunts/Ajouter", emprunt);
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Emprunt ajouté avec succès.";
+                Success = true;
+                Navigation.NavigateTo("Emprunt/emprunts");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Échec de l'ajout : {errorContent}";
+                Success = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+    }
+}

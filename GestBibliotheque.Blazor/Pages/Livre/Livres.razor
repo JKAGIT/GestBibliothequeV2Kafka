@@ -1,0 +1,178 @@
+﻿@page "/Livre/livres"
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@using CommonLib.GestBibliotheque.Utilitaires
+
+<h3 class="mb-3">Liste des livres</h3>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="/Livre/Ajout-Livres" class="btn btn-success">Ajouter un Livre</a>
+</div>
+
+@* Recherche *@
+<div class="mb-3">
+    <input type="text" class="form-control" placeholder="Rechercher" @bind="searchTerm" @oninput="OnSearchInput" />
+</div>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!pagedLivres.Any() && rechercheEffectuee)
+{
+    <p class="alert alert-info">Aucun livre ne correspond à la recherche.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Auteur</th>
+                <th>Catégorie</th>
+                <th>Stock</th>
+                <th>Disponibilité</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var livre in pagedLivres)
+            {
+                <tr>
+                    <td>@livre.Titre</td>
+                    <td>@livre.Auteur</td>
+                    <td>@livre.Libelle</td>
+                    <td>@livre.Stock</td>
+                    <td>@(livre.EstDisponible ? "Oui" : "Non")</td>
+                    <td>
+                        <a href="/Modifier-Livres/@livre.Id" class="btn btn-primary btn-sm me-2">Modifier</a>
+                        <button class="btn btn-danger btn-sm me-2" @onclick="() => DemanderConfirmationSupprimer(livre.Id)">Supprimer</button>
+                        <a href="/Details-Livres/@livre.Id" class="btn btn-info btn-sm">Détails</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @* Pagination *@
+    <Pagination CurrentPage="currentPage" TotalPages="totalPages" OnPageChanged="HandlePageChanged" />
+}
+
+<ConfirmationModal @bind-showConfirmation="showConfirmation"
+                   Message="Êtes-vous sûr de vouloir supprimer ce livre ?"
+                   OnConfirm="ConfirmerSuppression" />
+
+@code {
+    private List<LivreDto>? livres;
+    private List<LivreDto> pagedLivres = new();
+    private string searchTerm = string.Empty;
+
+    private int currentPage = 1;
+    private int pageSize = 8;
+    private int totalPages => (int)Math.Ceiling(filteredLivres.Count / (double)pageSize);
+
+    private string? Message;
+    private bool Success;
+
+    private Guid idLivreASupprimer;
+    private bool showConfirmation;
+
+    private bool isLoading = true;
+    private bool rechercheEffectuee = false;
+
+    private List<LivreDto> filteredLivres => string.IsNullOrWhiteSpace(searchTerm)
+        ? livres ?? new List<LivreDto>()
+        : livres!.Where(l =>
+            l.Titre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            l.Auteur.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            l.Libelle.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            livres = await Http.GetFromJsonAsync<List<LivreDto>>("/api-bibliotheque/livre");
+            UpdatePagedLivres();
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void DemanderConfirmationSupprimer(Guid id)
+    {
+        idLivreASupprimer = id;
+        showConfirmation = true;
+    }
+
+    private async Task ConfirmerSuppression()
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"/api-bibliotheque/livre/supprimer/{idLivreASupprimer}");
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Livre supprimé avec succès.";
+                Success = true;
+                livres = await Http.GetFromJsonAsync<List<LivreDto>>("/api-bibliotheque/livre");
+                UpdatePagedLivres();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Échec de la suppression : {errorContent}";
+                Success = false;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        finally
+        {
+            showConfirmation = false;
+        }
+    }
+
+    private void UpdatePagedLivres()
+    {
+        pagedLivres = filteredLivres
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+    }
+
+    private void HandlePageChanged(int page)
+    {
+        currentPage = page;
+        UpdatePagedLivres();
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+        rechercheEffectuee = true;
+        Message = null;
+        Success = false;
+        UpdatePagedLivres();
+    }
+}

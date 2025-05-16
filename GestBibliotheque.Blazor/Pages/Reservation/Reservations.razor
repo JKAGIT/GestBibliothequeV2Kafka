@@ -1,0 +1,189 @@
+﻿@page "/Reservation/reservations"
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@using CommonLib.GestBibliotheque.Utilitaires
+
+<h3 class="text-center mb-4">Gestion des réservations</h3>
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <a href="/Reservation/Ajout-Reservations" class="btn btn-primary">Ajouter une Réservation</a>
+    <input type="text" class="form-control w-50" placeholder="Rechercher" @bind="searchTerm" @oninput="OnSearchInput" />
+</div>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+@if (Loading)
+{
+    <LoadingSpinner />
+}
+else if (pagedReservations == null)
+{
+    <p class="alert alert-danger">Erreur lors du chargement des réservations.</p>
+}
+else if (!pagedReservations.Any() && rechercheEffectuee)
+{
+    <p class="alert alert-info">Aucune réservation ne correspond à la recherche.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th>Nom & Prénoms</th>
+                    <th>Livre</th>
+                    <th>Date Début</th>
+                    <th>Date Retour Estimée</th>
+                    <th>Livre dispo?</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reservation in pagedReservations)
+                {
+                    <tr>
+                        <td>@reservation.NomCompletUsager</td>
+                        <td>@reservation.TitreLivre</td>
+                        <td>@reservation.DateDebut.ToString("yyyy-MM-dd")</td>
+                        <td>@reservation.DateRetourEstimee.ToString("yyyy-MM-dd")</td>
+                        <td>@reservation.LivreDisponible</td>
+                        <td>
+                            @if (reservation.StatutReservation != "Annulée")
+                            {
+                                <span style="color:@(reservation.StatutReservation == "En retard" ? "red" : "green");">
+                                    @reservation.StatutReservation
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <a href="/Reservation/Modifier-Reservations/@reservation.ID" class="btn btn-primary btn-sm me-2">Modifier</a>
+                            <a href="/Reservation/Emprunt-Reservations/@reservation.ID" class="btn btn-info btn-sm me-2">Emprunter</a>
+                            <button class="btn btn-danger btn-sm" @onclick="() => ConfirmerAnnulation(reservation.ID)">Annuler</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @* Pagination *@
+    <Pagination CurrentPage="currentPage" TotalPages="totalPages" OnPageChanged="HandlePageChanged" />
+}
+
+@code {
+    private List<ReservationDto> reservations = new();
+    private List<ReservationDto> pagedReservations = new();
+    private string searchTerm = string.Empty;
+
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private string? Message;
+    private bool Success;
+    private bool Loading = true;
+    private bool rechercheEffectuee = false;
+
+    private int totalPages => (int)Math.Ceiling(filteredReservations.Count / (double)pageSize);
+
+    private List<ReservationDto> filteredReservations => string.IsNullOrWhiteSpace(searchTerm)
+        ? reservations
+        : reservations.Where(r =>
+            r.NomCompletUsager.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            r.TitreLivre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            r.StatutReservation.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerReservations();
+    }
+
+    private async Task ChargerReservations()
+    {
+        Loading = true;
+        try
+        {
+            reservations = await Http.GetFromJsonAsync<List<ReservationDto>>("/api-bibliotheque/reservation");
+            reservations = reservations.Where(r => !r.Annuler && !r.EstEmprunte).ToList();
+            currentPage = 1;
+            UpdatePagedReservations();
+            Success = true;
+        }
+        catch (Exception ex)
+        {
+            reservations = new();
+            Message = $"Erreur : {ex.Message}";
+            Success = false;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    private void UpdatePagedReservations()
+    {
+        if (filteredReservations.Any())
+        {
+            pagedReservations = filteredReservations
+                .Skip((currentPage - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
+        else
+        {
+            pagedReservations = new List<ReservationDto>();
+        }
+    }
+
+    private void HandlePageChanged(int page)
+    {
+        currentPage = page;
+        UpdatePagedReservations();
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+        rechercheEffectuee = true;
+        UpdatePagedReservations();
+    }
+
+    private async Task ConfirmerAnnulation(Guid id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Êtes-vous sûr de vouloir annuler cette réservation ?"))
+        {
+            await AnnulerReservation(id);
+        }
+    }
+
+    private async Task AnnulerReservation(Guid id)
+    {
+        try
+        {
+            var response = await Http.PutAsync($"/api-bibliotheque/reservation/annuler/{id}", null);
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Réservation annulée avec succès.";
+                Success = true;
+                await ChargerReservations();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Échec de l'annulation : {errorContent}";
+                Success = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors de l'annulation : {ex.Message}";
+            Success = false;
+        }
+    }
+}

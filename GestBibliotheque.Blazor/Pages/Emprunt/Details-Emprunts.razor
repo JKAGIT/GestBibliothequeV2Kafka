@@ -1,0 +1,70 @@
+﻿@page "/Emprunt/Details-emprunts/{id:guid}"
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<h3 class="mb-3">Détails de l'emprunt</h3>
+
+@if (emprunt == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <dl class="row">
+        <dt class="col-sm-3">Nom d'usager</dt>
+        <dd class="col-sm-9">@emprunt.NomCompletUsager</dd>
+
+        <dt class="col-sm-3">Titre du Livre</dt>
+        <dd class="col-sm-9">@emprunt.TitreLivre</dd>
+
+        <dt class="col-sm-3">Date d'emprunt</dt>
+        <dd class="col-sm-9">@emprunt.DateDebut.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Date de retour prévue</dt>
+        <dd class="col-sm-9">@emprunt.DateRetourPrevue.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Statut</dt>
+        <dd class="col-sm-9">
+            @if (emprunt.EnRetard)
+            {
+                <span style="color:red;">En retard</span>
+            }
+            else
+            {
+                <span style="color:green;">A jour</span>
+            }
+        </dd>
+    </dl>
+
+    <button class="btn btn-secondary" @onclick="RetourListe">Retour</button>
+}
+
+@code {
+    [Parameter]
+    public Guid id { get; set; }
+
+    private EmpruntDto? emprunt;
+    private string? Message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            emprunt = await Http.GetFromJsonAsync<EmpruntDto>($"/api-bibliotheque/emprunts/empruntParId/{id}");
+            if (emprunt == null)
+            {
+                Message = "Erreur : L'emprunt demandé est introuvable.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors du chargement des données : {ex.Message}";
+        }
+    }
+
+    private void RetourListe()
+    {
+        Navigation.NavigateTo("/Emprunt/emprunts");
+    }
+}

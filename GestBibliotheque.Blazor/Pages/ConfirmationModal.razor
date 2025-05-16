@@ -1,0 +1,40 @@
+﻿
+@if (showConfirmation)
+{
+    <div class="modal show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer la suppression</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="FermerConfirmation"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Message</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="FermerConfirmation">Annuler</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmerAction">Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop show"></div>
+}
+
+@code {
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public string Message { get; set; } = "Êtes-vous sûr de vouloir effectuer cette action ?";
+    [Parameter] public bool showConfirmation { get; set; }
+    [Parameter] public EventCallback<bool> ShowConfirmationChanged { get; set; }
+
+    private void ConfirmerAction()
+    {
+        OnConfirm.InvokeAsync();
+        FermerConfirmation();
+    }
+
+    private void FermerConfirmation()
+    {
+        ShowConfirmationChanged.InvokeAsync(false);
+    }
+}

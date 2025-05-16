@@ -1,0 +1,28 @@
+﻿@using GestBibliotheque.Blazor.Pages
+@inherits LayoutComponentBase
+
+<div class="page">
+
+    <!-- Barre du haut -->
+    <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
+        <div class="flex-grow-1">
+            <!-- Logo ou titre ici -->
+        </div>
+    </div>
+
+    <!-- Menu affiché seulement si l'utilisateur est connecté -->
+    <AuthorizeView>
+        <Authorized>
+            <NavMenu />
+        </Authorized>
+    </AuthorizeView>
+   
+    <div class="text-end">
+            <LoginDisplay />
+     </div>
+    <!-- Contenu principal -->
+    <div class="body-content p-4">
+        @Body
+    </div>
+</div>
+

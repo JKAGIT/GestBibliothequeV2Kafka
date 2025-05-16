@@ -1,0 +1,68 @@
+﻿@page "/categorie/ajout-categories"
+@using CommonLib.GestBibliotheque.Utilitaires
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<h3 class="mb-3">Ajouter une catégorie</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+<EditForm Model="@categorie" OnValidSubmit="AjouterCategorie">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="code" class="form-label">Code</label>
+        <InputText id="code" @bind-Value="categorie.Code" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label for="libelle" class="form-label">Libellé</label>
+        <InputText id="libelle" @bind-Value="categorie.Libelle" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Ajouter</button>
+    <button type="button" class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+</EditForm>
+
+@code {
+    private CategorieDto categorie = new();
+    private string? Message; 
+    private bool Success;   
+
+    private async Task AjouterCategorie()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api-bibliotheque/categorie/ajouter", categorie);
+            if (response.IsSuccessStatusCode)
+            {
+                Success = true;
+                Message = "Catégorie ajoutée avec succès !";
+                await Task.Delay(1000); 
+                Navigation.NavigateTo("/categories");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Success = false;
+                Message = errorContent;
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Success = false;
+            Message = GestionErreurs.GererErreur(ex);
+        }
+    }
+
+    private void Annuler()
+    {
+        Navigation.NavigateTo("/categories");
+    }
+}

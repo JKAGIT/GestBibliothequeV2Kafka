@@ -1,0 +1,47 @@
+﻿@code {
+    [Parameter] public int CurrentPage { get; set; }
+    [Parameter] public int TotalPages { get; set; }
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= TotalPages)
+        {
+            OnPageChanged.InvokeAsync(page);
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            GoToPage(CurrentPage - 1);
+        }
+    }
+
+    private void NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            GoToPage(CurrentPage + 1);
+        }
+    }
+}
+
+<nav>
+    <ul class="pagination">
+        <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+            <a class="page-link" @onclick="PreviousPage" style="cursor: pointer;">Précédent</a>
+        </li>
+        @for (int i = 1; i <= TotalPages; i++)
+        {
+            var pageNumber = i;
+            <li class="page-item @(CurrentPage == pageNumber ? "active" : "")">
+                <a class="page-link" @onclick="() => GoToPage(pageNumber)" style="cursor: pointer;">@pageNumber</a>
+            </li>
+        }
+        <li class="page-item @(CurrentPage == TotalPages || TotalPages == 0  ? "disabled" : "")">
+            <a class="page-link" @onclick="NextPage" style="cursor: pointer;">Suivant</a>
+        </li>
+    </ul>
+</nav>

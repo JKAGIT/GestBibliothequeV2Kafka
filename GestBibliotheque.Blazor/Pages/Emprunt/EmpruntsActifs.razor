@@ -1,0 +1,141 @@
+﻿@page "/Emprunt/EmpruntsActifs"
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using CommonLib.GestBibliotheque.Utilitaires
+
+<h3 class="mb-3">Liste des emprunts actifs</h3>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <input type="text" class="form-control" placeholder="Rechercher" @bind="searchTerm" @oninput="OnSearchInput" />
+</div>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (pagedEmpruntsActifs == null)
+{
+    <p class="alert alert-warning">Aucun emprunt actif récupéré.</p>
+}
+else if (!pagedEmpruntsActifs.Any() && rechercheEffectuee)
+{
+    <p class="alert alert-info">Aucun emprunt actif ne correspond à la recherche.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nom &amp; Prénoms</th>
+                    <th>Titre du Livre</th>
+                    <th>Date d'emprunt</th>
+                    <th>Date de retour prévue</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var emprunt in pagedEmpruntsActifs)
+                {
+                    <tr>
+                        <td>@emprunt.NomCompletUsager</td>
+                        <td>@emprunt.TitreLivre</td>
+                        <td>@emprunt.DateDebut.ToString("yyyy-MM-dd")</td>
+                        <td>@emprunt.DateRetourPrevue.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            <span style="color:@(emprunt.EnRetard ? "red" : "green")">
+                                @(emprunt.EnRetard ? "En retard" : "À jour")
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/Emprunt/Modifier-Emprunts/@emprunt.ID" class="btn btn-primary btn-sm me-2">Modifier</a>
+                            <a href="/Emprunt/Details-Emprunts/@emprunt.ID" class="btn btn-info btn-sm me-2">Détails</a>
+                            <a href="/Retour/Ajout-Retours/@emprunt.ID" class="btn btn-warning btn-sm">Retourner le livre</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination centralisée -->
+    <Pagination CurrentPage="currentPage" TotalPages="totalPages" OnPageChanged="HandlePageChange" />
+}
+
+@code {
+    private List<EmpruntDto>? empruntsActifs;
+    private List<EmpruntDto> pagedEmpruntsActifs = new();
+    private string searchTerm = string.Empty;
+
+    private int currentPage = 1;
+    private int pageSize = 8;
+    private int totalPages => (int)Math.Ceiling(filteredEmpruntsActifs.Count / (double)pageSize);
+
+    private string? Message;
+    private bool Success;
+    private bool rechercheEffectuee = false;
+    private bool isLoading = true;
+
+    private List<EmpruntDto> filteredEmpruntsActifs => string.IsNullOrWhiteSpace(searchTerm)
+        ? empruntsActifs ?? new List<EmpruntDto>()
+        : empruntsActifs!.Where(e =>
+            e.NomCompletUsager.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            e.TitreLivre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            empruntsActifs = await Http.GetFromJsonAsync<List<EmpruntDto>>("/api-bibliotheque/emprunts");
+            UpdatePagedEmpruntsActifs();
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void UpdatePagedEmpruntsActifs()
+    {
+        if (filteredEmpruntsActifs.Any())
+        {
+            pagedEmpruntsActifs = filteredEmpruntsActifs
+                .Skip((currentPage - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
+        else
+        {
+            pagedEmpruntsActifs = new List<EmpruntDto>();
+        }
+    }
+
+    private void HandlePageChange(int page)
+    {
+        currentPage = page;
+        UpdatePagedEmpruntsActifs();
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+        rechercheEffectuee = true;
+        Message = null;
+        Success = false;
+        UpdatePagedEmpruntsActifs();
+    }
+}

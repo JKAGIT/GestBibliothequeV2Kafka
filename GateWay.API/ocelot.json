@@ -1,0 +1,573 @@
+
+{
+  "Routes": [
+    // Categorie Routes
+    {
+      "DownstreamPathTemplate": "/api/categorie/ajouter",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/categorie/ajouter",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/categorie/modifier/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/categorie/modifier/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/categorie/supprimer/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/categorie/supprimer/{id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/categorie/categorieParId/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/categorie/categorieParId/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/categorie/categorieParCode/{code}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/categorie/categorieParCode/{code}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/categorie",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/categorie",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+
+    // Livre Routes
+    {
+      "DownstreamPathTemplate": "/api/livre/ajouter",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/livre/ajouter",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/livre/modifier/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/livre/modifier/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/livre/supprimer/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/livre/supprimer/{id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/livre/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/livre/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/livre/en-stock",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/livre/en-stock",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/livre",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/livre",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/livre/categorie/{categorieId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/livre/categorie/{categorieId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/livre/disponibilite/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/livre/disponibilite/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+
+    // Usager Routes
+    {
+      "DownstreamPathTemplate": "/api/usagers/ajouter",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/usagers/ajouter",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/usagers/modifier/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/usagers/modifier/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/usagers/supprimer/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/usagers/supprimer/{id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/usagers/usagerParId/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/usagers/usagerParId/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/usagers",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/usagers",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+
+    // Emprunt Routes
+    {
+      "DownstreamPathTemplate": "/api/emprunts",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/emprunts",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/emprunts/usager/{idUsager}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/emprunts/usager/{idUsager}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/emprunts/empruntParId/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/emprunts/empruntParId/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/emprunts/Ajouter",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/emprunts/Ajouter",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/emprunts/modifier/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/emprunts/modifier/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/emprunts/supprimer/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/emprunts/supprimer/{id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+
+    //Route Reservation
+    {
+      "DownstreamPathTemplate": "/api/reservation",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/reservation",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/reservation/reservationParId/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/reservation/reservationParId/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+
+    {
+      "DownstreamPathTemplate": "/api/reservation/ajouter",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/reservation/ajouter",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/reservation/modifier/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/reservation/modifier/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/reservation/annuler/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/reservation/annuler/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    {
+      "DownstreamPathTemplate": "/api/reservation/emprunter/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+
+      "UpstreamPathTemplate": "/api-bibliotheque/reservation/emprunter/{id}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+
+    // Route Retour
+    {
+      "DownstreamPathTemplate": "/api/retour/ajouter",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/retour/ajouter",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "Bibliotheque"
+    },
+    //Route operation
+    {
+      "DownstreamPathTemplate": "/api/Operation/verifdisponiblite/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/operation/verifdisponiblite/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/Operation/disponible",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/operation/disponible",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "Bibliotheque",
+      "CacheOptions": {
+        "TtlSeconds": 60
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/Operation/stock/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7260
+        }
+      ],
+      "UpstreamPathTemplate": "/api-bibliotheque/operation/stock/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "SwaggerKey": "Bibliotheque"
+    }
+  ],
+
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5000"
+  },
+  "SwaggerEndPoints": [
+    {
+      "Key": "Bibliotheque",
+      "Config": [
+        {
+          "Name": "Categorie API",
+          "Version": "v1",
+          "Url": "https://localhost:7260/swagger/v1/swagger.json"
+        },
+        {
+          "Name": "Livre API",
+          "Version": "v1",
+          "Url": "https://localhost:7260/swagger/v1/swagger.json"
+        },
+        {
+          "Name": "Usager API",
+          "Version": "v1",
+          "Url": "https://localhost:7260/swagger/v1/swagger.json"
+        },
+        {
+          "Name": "Emprunt API",
+          "Version": "v1",
+          "Url": "https://localhost:7260/swagger/v1/swagger.json"
+        },
+        {
+          "Name": "Reservation API",
+          "Version": "v1",
+          "Url": "https://localhost:7260/swagger/v1/swagger.json"
+        },
+        {
+          "Name": "Retour API",
+          "Version": "v1",
+          "Url": "https://localhost:7260/swagger/v1/swagger.json"
+        },
+        {
+          "Name": "Operation API",
+          "Version": "v1",
+          "Url": "https://localhost:7260/swagger/v1/swagger.json"
+        }
+
+      ]
+    }
+  ]
+}

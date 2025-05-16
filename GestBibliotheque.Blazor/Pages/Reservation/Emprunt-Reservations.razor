@@ -1,0 +1,148 @@
+﻿@page "/Reservation/Emprunt-Reservations/{id:guid}"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using CommonLib.GestBibliotheque.Utilitaires
+@using GestBibliotheque.Blazor.Models
+
+<h3 class="text-center mb-4">Emprunter un livre reservé</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+@if (reservation == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <EditForm Model="@emprunt" OnValidSubmit="AjouterEmprunt">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="usagerSelect" class="form-label">Usager</label>
+            <InputSelect id="usagerSelect" class="form-select" @bind-Value="selectedUsagerString" disabled>
+                <option value="@reservation.IDUsager.ToString()">@reservation.NomCompletUsager</option>
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="livreSelect" class="form-label">Livre</label>
+            <InputSelect id="livreSelect" class="form-select" @bind-Value="selectedLivreString" disabled>
+                <option value="@reservation.IDLivre.ToString()">@reservation.TitreLivre</option>
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="dateDebut" class="form-label">Date d'emprunt</label>
+            <InputDate id="dateDebut" @bind-Value="emprunt.DateDebut" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label for="dateRetourPrevue" class="form-label">Date de retour prévue</label>
+            <InputDate id="dateRetourPrevue" @bind-Value="emprunt.DateRetourPrevue" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-success" @onclick="AjouterEmprunt">Valider l'emprunt</button>
+        <button type="button" class="btn btn-secondary" @onclick="RetourListe">Annuler</button>
+    </EditForm>
+}
+
+@code {
+
+    [Parameter] public Guid id { get; set; }
+
+    private EmpruntDto emprunt = new EmpruntDto();
+    private ReservationDto? reservation;
+    private string? Message;
+    private bool Success;
+
+    private string selectedUsagerString
+    {
+        get => emprunt.IDUsager.ToString();
+        set
+        {
+            if (Guid.TryParse(value, out var guidVal))
+                emprunt.IDUsager = guidVal;
+        }
+    }
+
+    private string selectedLivreString
+    {
+        get => emprunt.IDLivre.ToString();
+        set
+        {
+            if (Guid.TryParse(value, out var guidVal))
+                emprunt.IDLivre = guidVal;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerReservation();
+        emprunt.DateDebut = DateTime.Today;
+        emprunt.DateRetourPrevue = DateTime.Today.AddDays(14); // Par défaut
+
+        if (reservation != null)
+        {
+            emprunt.IDUsager = reservation.IDUsager;
+            emprunt.IDLivre = reservation.IDLivre;
+        }
+    }
+
+    private async Task ChargerReservation()
+    { 
+        try
+        {
+            reservation = await Http.GetFromJsonAsync<ReservationDto>($"/api-bibliotheque/reservation/reservationParId/{id}");
+            Success = true;
+   
+        }
+        catch (HttpRequestException httpEx)
+        {
+            Message = $"Erreur de chargement : {httpEx.Message}";
+            Success = false;
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+
+    }
+
+
+    private async Task AjouterEmprunt()
+    {
+        try
+        {
+            var response = await Http.PostAsync($"/api-bibliotheque/reservation/emprunter/{id}", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Emprunt créé avec succès.";
+                Success = true;
+                RetourListe(); 
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = errorContent;
+                Success = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors de la création de l'emprunt : {ex.Message}";
+            Success = false;
+        }
+
+    }
+
+    private void RetourListe()
+    {
+        Navigation.NavigateTo("/Reservation/reservations");
+    }
+}

@@ -1,0 +1,111 @@
+﻿@page "/Retour/Ajout-Retours/{id:guid}"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using CommonLib.GestBibliotheque.Utilitaires
+@using GestBibliotheque.Blazor.Models
+
+<h3 class="text-center mb-4">Retourner un livre</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+@if (emprunt == null)
+{
+    <p class="alert alert-warning">Chargement des données de l'emprunt...</p>
+}
+else
+{
+    <EditForm Model="@retour" OnValidSubmit="AjouterRetour">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="usagerSelect" class="form-label">Nom & Prénoms</label>
+            <input type="text" class="form-control" value="@emprunt.NomCompletUsager" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="livreTitre" class="form-label">Titre du livre</label>
+            <input type="text" class="form-control" value="@emprunt.TitreLivre" disabled />
+        </div>
+
+        <div class="mb-3">
+            <label for="dateRetour" class="form-label">Date de Retour</label>
+            <InputDate id="dateRetour" @bind-Value="retour.DateRetour" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+        <button type="button" class="btn btn-secondary" @onclick="RetourListe">Annuler</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public Guid id { get; set; } 
+
+    private EmpruntDto? emprunt;
+    private RetourDto retour = new();
+    private string? Message;
+    private bool Success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerEmprunt(id); 
+        retour.IDEmprunt = id;  
+        retour.DateRetour = DateTime.Today;
+    }
+
+    private async Task ChargerEmprunt(Guid id)
+    {
+        try
+        {
+            emprunt = await Http.GetFromJsonAsync<EmpruntDto>($"/api-bibliotheque/emprunts/empruntParId/{id}");
+            Success = true;
+        }
+        catch (HttpRequestException httpEx)
+        {
+            Console.WriteLine($"Erreur HTTP : {httpEx.Message}");
+            Message = GestionErreurs.GererErreur(httpEx);
+            Success = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur générale : {ex.Message}");
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+    }
+
+    private async Task AjouterRetour()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api-bibliotheque/retour/ajouter", retour);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Retour ajouté avec succès.";
+                Success = true;
+                RetourListe();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Échec de l'ajout : {errorContent}";
+                Success = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors de l'ajout du retour : {ex.Message}";
+            Success = false;
+        }
+    }
+
+    private void RetourListe()
+    {
+        Navigation.NavigateTo("/Emprunt/emprunts");
+    }
+}

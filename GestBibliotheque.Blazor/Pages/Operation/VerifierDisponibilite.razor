@@ -1,0 +1,82 @@
+﻿@page "/Operation/VerifierDisponibilite"
+@inject HttpClient Http
+@using GestBibliotheque.Blazor.Models
+
+<h3 class="mb-4">Vérifier la disponibilité du livre</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-info">@Message</div>
+}
+
+<div class="form-group mb-3">
+    <input id="searchLivre" class="form-control" @bind="searchTerm" @bind:event="oninput" placeholder="Rechercher un livre..." />
+</div>
+
+<div class="form-group mb-3">
+    <label for="livreSelect" class="form-label">Sélectionnez un livre :</label>
+    <select id="livreSelect" class="form-control" @bind="selectedLivreId" required>
+        <option value="">-- Sélectionner un livre --</option>
+        @if (FilteredLivres.Any())
+        {
+            @foreach (var livre in FilteredLivres)
+            {
+                <option value="@livre.Id">@livre.Titre</option>
+            }
+        }
+        else
+        {
+            <option value="">Aucun livre disponible</option>
+        }
+    </select>
+</div>
+
+<button class="btn btn-primary" @onclick="VerifierDisponibiliteLivre">Vérifier</button>
+
+@if (!string.IsNullOrEmpty(disponibiliteMessage))
+{
+    <div class="alert alert-info mt-3">@disponibiliteMessage</div>
+}
+
+@code {
+    private List<LivreDto> livres = new();
+    private List<LivreDto> FilteredLivres => string.IsNullOrWhiteSpace(searchTerm)
+        ? livres
+        : livres.Where(l => l.Titre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private string searchTerm = string.Empty;
+    private string? selectedLivreId;
+    private string? Message;
+    private string? disponibiliteMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            livres = await Http.GetFromJsonAsync<List<LivreDto>>("/api-bibliotheque/livre");
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors du chargement des livres : {ex.Message}";
+        }
+    }
+
+    private async Task VerifierDisponibiliteLivre()
+    {
+        if (string.IsNullOrEmpty(selectedLivreId))
+        {
+            disponibiliteMessage = "Veuillez sélectionner un livre.";
+            return;
+        }
+
+        try
+        {
+            var response = await Http.GetFromJsonAsync<bool>($"/api-bibliotheque/operation/verifdisponiblite/{selectedLivreId}");
+            disponibiliteMessage = response ? "Disponible" : "Non disponible";
+        }
+        catch (Exception ex)
+        {
+            disponibiliteMessage = $"Erreur : {ex.Message}";
+        }
+    }
+}

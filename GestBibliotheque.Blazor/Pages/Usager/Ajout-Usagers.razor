@@ -1,0 +1,74 @@
+﻿@page "/usager/ajout-usagers"
+@using CommonLib.GestBibliotheque.Utilitaires
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+
+<h3 class="mb-3">Ajouter un usager</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+<form method="post" @onsubmit="AjouterUsager">
+    <div class="mb-3">
+        <label for="nom" class="form-label">Nom :</label>
+        <input type="text" id="nom" class="form-control" @bind="usager.Nom" required />
+    </div>  
+    <div class="mb-3">
+        <label for="prenoms" class="form-label">Prénoms :</label>
+        <input type="text" id="nom" class="form-control" @bind="usager.Prenoms" required />
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email :</label>
+        <input type="email" id="email" class="form-control" @bind="usager.Courriel" required />
+    </div>
+    <div class="mb-3">
+        <label for="telephone" class="form-label">Téléphone :</label>
+        <input type="text" id="telephone" class="form-control" @bind="usager.Telephone" placeholder="418 111 1234" maxlength="12" required />
+    </div>
+
+    
+    <button type="button" class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+    <button type="submit" class="btn btn-success">Ajouter</button>
+</form>
+
+@code {
+    private UsagerDto usager = new UsagerDto();
+    private string? Message;
+    private bool Success;
+
+    private async Task AjouterUsager()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api-bibliotheque/usagers/ajouter", usager);
+
+            if (response.IsSuccessStatusCode)
+            {
+                
+                Success = true;
+                Message = "Usager ajouté avec succès.";
+                await Task.Delay(1000);
+                Navigation.NavigateTo("/Usagers");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Échec de l'ajout : {errorContent}";
+                Success = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+    }
+    private void Annuler()
+    {
+        Navigation.NavigateTo("/Usagers");
+    }
+}

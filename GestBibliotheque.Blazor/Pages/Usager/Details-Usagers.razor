@@ -1,0 +1,93 @@
+﻿@page "/details-usagers/{id:guid}"
+@using CommonLib.GestBibliotheque.Utilitaires
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+
+<h3 class="mb-3">Détails de l'usager</h3>
+
+@if (usager == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <dl class="row">
+        <dt class="col-sm-3">Nom</dt>
+        <dd class="col-sm-9">@usager.Nom @usager.Prenoms</dd>
+
+        <dt class="col-sm-3">Courriel</dt>
+        <dd class="col-sm-9">@usager.Courriel</dd>
+
+        <dt class="col-sm-3">Téléphone</dt>
+        <dd class="col-sm-9">@usager.Telephone</dd>
+    </dl>
+
+    <h4>Emprunts en cours</h4>
+    @if (!usager.Emprunts.Any())
+    {
+        <p>Aucun emprunt en cours.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Titre du Livre</th>
+                    <th>Date d'emprunt</th>
+                    <th>Date de retour prévue</th>
+                    <th>En retard</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var emprunt in usager.Emprunts)
+                {
+                    <tr>
+                        <td>@emprunt.TitreLivre</td>
+                        <td>@emprunt.DateDebut.ToShortDateString()</td>
+                        <td>@emprunt.DateRetourPrevue.ToShortDateString()</td>
+                        <td>@(emprunt.EnRetard ? "Oui" : "Non")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <button class="btn btn-secondary" @onclick="RetourListe">Retour</button>
+}
+
+@code {
+    [Parameter]
+    public Guid id { get; set; }
+
+    private UsagerDto? usager = null;
+    private string? Message;
+    private bool Success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            usager = await Http.GetFromJsonAsync<UsagerDto>($"/api-bibliotheque/usagers/usagerParId/{id}");
+            Success = true;
+        }
+        catch (HttpRequestException httpEx)
+        {
+            Console.WriteLine($"Erreur HTTP : {httpEx.Message}");
+            Message = GestionErreurs.GererErreur(httpEx);
+            Success = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur générale : {ex.Message}");
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+    }
+
+    private void RetourListe()
+    {
+        Navigation.NavigateTo("/usagers");
+    }
+}

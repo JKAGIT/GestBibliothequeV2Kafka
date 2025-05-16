@@ -1,0 +1,184 @@
+﻿@page "/categories"
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@using CommonLib.GestBibliotheque.Utilitaires
+
+<h3 class="mb-3">Liste des catégories</h3>
+
+<a href="/categorie/Ajout-Categories" class="btn btn-success">Ajouter une Catégorie</a>
+
+
+<div class="mb-3">
+    <input type="text" class="form-control" placeholder="Rechercher" @bind="searchTerm" @oninput="OnSearchInput" />
+</div>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+@if (isLoading)
+{
+    <LoadingSpinner/>
+}
+else if (pagedCategories == null)
+{
+    <p class="alert alert-warning">Aucune categorie récupérée.</p>
+}
+else if (!pagedCategories.Any() && rechercheEffectuee)
+{
+    <p class="alert alert-info">Aucune catégorie ne correspond à la recherche.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Libellé</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var categorie in pagedCategories)
+            {
+                <tr>
+                    <td>@categorie.Code</td>
+                    <td>@categorie.Libelle</td>
+                    <td>
+                        <a href="/Modifier-Categories/@categorie.Id" class="btn btn-primary btn-sm me-2">Modifier</a>
+                        <button class="btn btn-danger btn-sm me-2" @onclick="() => DemanderConfirmationSupprimer(categorie.Id)">Supprimer</button>
+                        <a href="/details-categories/@categorie.Id" class="btn btn-info btn-sm">Détails</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @* Pagination *@
+    <Pagination CurrentPage="currentPage" TotalPages="totalPages" OnPageChanged="HandlePageChanged" />
+}
+
+<ConfirmationModal @bind-showConfirmation="showConfirmation"
+                   Message="Êtes-vous sûr de vouloir supprimer cette catégorie ?"
+                   OnConfirm="ConfirmerSuppression" />
+
+@code {
+    private List<CategorieDto>? categories;
+    private List<CategorieDto> pagedCategories = new();
+    private string searchTerm = string.Empty;
+
+    private int currentPage = 1;
+    private int pageSize = 8;
+    private int totalPages => (int)Math.Ceiling(filteredCategories.Count / (double)pageSize);
+
+    private string? Message;
+    private bool Success;
+
+    private Guid idCategorieASupprimer;
+    private bool showConfirmation;
+
+    private bool rechercheEffectuee = false;
+    private bool isLoading = true;
+
+    // Liste filtrée
+    private List<CategorieDto> filteredCategories => string.IsNullOrWhiteSpace(searchTerm)
+        ? categories ?? new List<CategorieDto>()
+        : categories!.Where(c =>
+            c.Code.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            c.Libelle.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            categories = await Http.GetFromJsonAsync<List<CategorieDto>>("/api-bibliotheque/categorie");
+            UpdatePagedCategories();
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void DemanderConfirmationSupprimer(Guid id)
+    {
+        idCategorieASupprimer = id;
+        showConfirmation = true;
+    }
+
+    private async Task ConfirmerSuppression()
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"/api-bibliotheque/categorie/supprimer/{idCategorieASupprimer}");
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Catégorie supprimée avec succès.";
+                Success = true;
+                categories = await Http.GetFromJsonAsync<List<CategorieDto>>("/api-bibliotheque/categorie");
+                UpdatePagedCategories();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Échec de la suppression : {errorContent}";
+                Success = false;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        finally
+        {
+            FermerConfirmation();
+        }
+    }
+
+    private void FermerConfirmation()
+    {
+        showConfirmation = false;
+    }
+
+    private void UpdatePagedCategories()
+    {
+        if (filteredCategories.Any())
+        {
+            pagedCategories = filteredCategories
+                .Skip((currentPage - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
+        else
+        {
+            pagedCategories = new List<CategorieDto>();
+        }
+    }
+    private void HandlePageChanged(int page)
+    {
+        currentPage = page;
+        UpdatePagedCategories();
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+        rechercheEffectuee = true;
+        Message = null;
+        Success = false;
+        UpdatePagedCategories();
+    }
+}

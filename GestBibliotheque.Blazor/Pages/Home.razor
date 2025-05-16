@@ -1,0 +1,34 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>Home</PageTitle>
+
+<div>
+    <h1 class="display-4 text-primary">Bienvenue à la Bibliothèque</h1>
+    <p class="lead text-secondary">Explorez, gérez et découvrez une collection infinie de savoir et d'imagination.</p>
+    <div class="my-4">
+        <h2 class="text-success">Pourquoi utiliser notre plateforme ?</h2>
+        <ul style="list-style-type: none; padding: 0;">
+            <li>📚 <strong>Ajouter et organiser vos livres :</strong> Gérez facilement votre collection.</li>
+            <li>🗂️ <strong>Catégories à explorer :</strong> Recherchez parmi des genres variés.</li>
+            <li>📊 <strong>Gestion de bibliothèque :</strong> Gardez un œil sur le stock.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="mt-5">
+    <h2 class="text-warning">🌟 Explorez une vaste collection de livres</h2>
+    <p class="text-secondary">Des romans captivants, des guides pratiques, des classiques intemporels et bien plus encore à portée de clic !</p>
+</div>
+
+<div class="mt-5">
+    <h2 class="text-info">📚 Cherchez, lisez, apprenez</h2>
+    <p class="text-secondary">Utilisez notre moteur de recherche rapide pour trouver des livres par titre, auteur, genre ou mot-clé. Laissez-vous guider par nos suggestions de lecture.</p>
+</div>
+
+<div class="mt-5">
+    <h2 class="text-success">👨‍🏫 Les ressources pour tous</h2>
+    <p class="text-secondary">Que vous soyez étudiant, amateur de littérature ou chercheur, notre bibliothèque numérique répond à vos besoins. Profitez d'un accès illimité à nos ouvrages !</p>
+</div>

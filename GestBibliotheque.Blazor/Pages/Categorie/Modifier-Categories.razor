@@ -1,0 +1,92 @@
+﻿@page "/modifier-categories/{id:guid}"
+@using CommonLib.GestBibliotheque.Utilitaires
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+
+
+<h3 class="mb-3">Modifier catégorie</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+<EditForm Model="@categorie" OnValidSubmit="ModifierCategorie">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="code" class="form-label">Code</label>
+        <InputText id="code" @bind-Value="categorie.Code" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label for="libelle" class="form-label">Libellé</label>
+        <InputText id="libelle" @bind-Value="categorie.Libelle" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Modifier</button>
+    <button type="button" class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+</EditForm>
+
+@code {
+    private CategorieDto categorie = new();
+    private string? Message;
+    private bool Success;
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categorie = await Http.GetFromJsonAsync<CategorieDto>($"/api-bibliotheque/categorie/categorieParId/{Id}");
+            Success = true;
+        }
+        catch (HttpRequestException httpEx)
+        {
+            Message = $"Erreur de chargement : {httpEx.Message}";
+            Success = false;
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+    }
+
+    private async Task ModifierCategorie()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"/api-bibliotheque/categorie/modifier/{Id}", categorie);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Success = true;
+                Message = "Catégorie modifiée avec succès !";
+                await Task.Delay(1000);
+                Navigation.NavigateTo("/categories");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Success = false;
+                Message = $"Échec de la modification : {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+    }
+
+    private void Annuler()
+    {
+        Navigation.NavigateTo("/categories");
+    }
+}

@@ -1,0 +1,116 @@
+﻿@page "/Operation/GestionStock"
+@inject HttpClient Http
+@using GestBibliotheque.Blazor.Models
+
+<h3 class="mb-3">Gestion du stock des livres</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+<div class="mb-3">
+    <label for="searchLivre" class="form-label">Rechercher un livre :</label>
+    <input id="searchLivre" @bind="searchTerm" @bind:event="oninput" class="form-control" placeholder="Rechercher par titre ou auteur..." />
+</div>
+
+<div class="mb-3">
+    <label for="livreSelect" class="form-label">Sélectionnez un livre :</label>
+    <select id="livreSelect" class="form-control" @bind="idLivre" required>
+        <option value="">-- Sélectionner un livre --</option>
+        @if (FilteredLivres.Any())
+        {
+            @foreach (var livre in FilteredLivres)
+            {
+                <option value="@livre.Id">@livre.Titre (@livre.Stock en stock)</option>
+            }
+        }
+        else
+        {
+            <option value="">Aucun livre disponible</option>
+        }
+    </select>
+</div>
+
+<div class="mb-3">
+    <label for="quantite" class="form-label">Quantité à ajouter :</label>
+    <input id="quantite" type="number" class="form-control" @bind="quantiteAjoutee" min="1" placeholder="Entrer une quantité > 0" required />
+</div>
+
+<button class="btn btn-primary" @onclick="MettreAJourStock">Mettre à jour le stock</button>
+
+@code {
+    private List<LivreDto> livres = new(); // Liste des livres
+    private List<LivreDto> FilteredLivres => string.IsNullOrWhiteSpace(searchTerm)
+        ? livres
+        : livres.Where(l =>
+            l.Titre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            l.Auteur.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private string searchTerm = string.Empty; 
+    private string? idLivre;
+    private int quantiteAjoutee; 
+    private string? Message;
+    private bool Success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            livres = await Http.GetFromJsonAsync<List<LivreDto>>("/api-bibliotheque/livre"); // Charge tous les livres
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors du chargement des livres : {ex.Message}";
+        }
+    }
+
+    private async Task MettreAJourStock()
+    {
+        if (string.IsNullOrEmpty(idLivre))
+        {
+            Message = "Veuillez sélectionner un livre.";
+            return;
+        }
+
+        if (quantiteAjoutee <= 0)
+        {
+            Message = "Veuillez entrer une quantité supérieure à 0.";
+            return;
+        }
+
+        try
+        {
+            var mettreAJourStockCommand = new
+            {
+                Id = idLivre,
+                QuantiteAjoutee = quantiteAjoutee
+            };
+
+            var response = await Http.PutAsJsonAsync($"/api-bibliotheque/operation/stock/{idLivre}", mettreAJourStockCommand);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Stock mis à jour avec succès.";
+                await ReinitialiserFormulaire(); 
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Échec de la mise à jour : {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors de la mise à jour du stock : {ex.Message}";
+        }
+    }
+
+    private async Task ReinitialiserFormulaire()
+    {
+        idLivre = null; 
+        quantiteAjoutee = 0; 
+        searchTerm = string.Empty; 
+        livres = await Http.GetFromJsonAsync<List<LivreDto>>("/api-bibliotheque/livre"); 
+    }
+}

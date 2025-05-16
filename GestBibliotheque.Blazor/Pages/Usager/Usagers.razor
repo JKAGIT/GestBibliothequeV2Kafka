@@ -1,0 +1,192 @@
+﻿
+@page "/usagers"
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@using CommonLib.GestBibliotheque.Utilitaires
+
+<h3 class="mb-3">Liste des usagers</h3>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="/Usager/Ajout-Usagers" class="btn btn-success">Ajouter un Usager</a>
+</div>
+
+
+<div class="mb-3">
+    <input type="text" class="form-control" placeholder="Rechercher" @bind="searchTerm" @oninput="OnSearchInput" />
+</div>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (pagedUsagers == null)
+{
+    <p class="alert alert-warning">Aucun usager récupéré.</p>
+}
+else if (!pagedUsagers.Any() && rechercheEffectuee)
+{
+    <p class="alert alert-info">Aucun usager ne correspond à la recherche.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prénoms</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var usager in pagedUsagers)
+            {
+                <tr>
+                    <td>@usager.Nom</td>
+                    <td>@usager.Prenoms</td>
+                    <td>@usager.Courriel</td>
+                    <td>@usager.Telephone</td>
+                    <td>
+                        <a href="/Modifier-Usagers/@usager.Id" class="btn btn-primary btn-sm me-2">Modifier</a>
+                        <button class="btn btn-danger btn-sm me-2" @onclick="() => DemanderConfirmationSupprimer(usager.Id)">Supprimer</button>
+                        <a href="/Details-Usagers/@usager.Id" class="btn btn-info btn-sm">Détails</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @* Pagination *@
+    <Pagination CurrentPage="currentPage" TotalPages="totalPages" OnPageChanged="HandlePageChanged" />
+}
+
+@* Confirmer Suppression *@
+<ConfirmationModal @bind-showConfirmation="showConfirmation"
+                   Message="Êtes-vous sûr de vouloir supprimer cet usager ?"
+                   OnConfirm="ConfirmerSuppression" />
+@code {
+    private List<UsagerDto>? usagers;
+    private List<UsagerDto> pagedUsagers = new();
+    private string searchTerm = string.Empty;
+
+    private int currentPage = 1;
+    private int pageSize = 8;
+    private int totalPages => (int)Math.Ceiling(filteredUsagers.Count / (double)pageSize);
+
+    private string? Message;
+    private bool Success;
+
+    private Guid idUsagerASupprimer;
+    private bool showConfirmation;
+
+    private bool rechercheEffectuee = false;
+    private bool isLoading = true; 
+
+
+    private List<UsagerDto> filteredUsagers => string.IsNullOrWhiteSpace(searchTerm)
+        ? usagers ?? new List<UsagerDto>()
+        : usagers!.Where(u =>
+            u.Nom.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            u.Courriel.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            usagers = await Http.GetFromJsonAsync<List<UsagerDto>>("/api-bibliotheque/usagers");
+            UpdatePagedUsagers();
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        finally
+        {
+            isLoading = false; 
+        }
+    }
+
+    private void DemanderConfirmationSupprimer(Guid id)
+    {
+        idUsagerASupprimer = id;
+        showConfirmation = true;
+    }
+
+    private async Task ConfirmerSuppression()
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"/api-bibliotheque/usagers/supprimer/{idUsagerASupprimer}");
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Usager supprimé avec succès.";
+                Success = true;
+                usagers = await Http.GetFromJsonAsync<List<UsagerDto>>("/api-bibliotheque/usagers");
+                UpdatePagedUsagers();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Échec de la suppression : {errorContent}";
+                Success = false;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        finally
+        {
+            FermerConfirmation();
+        }
+    }
+
+    private void FermerConfirmation()
+    {
+        showConfirmation = false;
+    }
+
+    private void UpdatePagedUsagers()
+    {
+        if (filteredUsagers.Any())
+        {
+            pagedUsagers = filteredUsagers
+                .Skip((currentPage - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
+        else
+        {
+            pagedUsagers = new List<UsagerDto>();
+        }
+    }
+    private void HandlePageChanged(int page)
+    {
+        currentPage = page;
+        UpdatePagedUsagers();
+    }
+
+    private async Task OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+        rechercheEffectuee = true;
+        Message = null;
+        Success = false;
+        UpdatePagedUsagers();
+    }
+}

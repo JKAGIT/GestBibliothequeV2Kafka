@@ -1,0 +1,103 @@
+﻿@page "/Emprunt/emprunts"
+@using CommonLib.GestBibliotheque.Utilitaires
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+
+<h4 class="text-center mb-4">Gestion des emprunts</h4>
+
+<div class="mb-3">
+    <a href="/Emprunt/Ajout-Emprunts" class="btn btn-primary">Emprunter un livre</a>
+</div>
+
+<!-- Emprunts actifs -->
+<h5>Emprunts actifs</h5>
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!PagedActiveEmprunts.Any())
+{
+    <p class="alert alert-info">Aucun emprunt actif.</p>
+}
+else
+{
+    <EmpruntTable PagedEmprunts="PagedActiveEmprunts"
+                  CurrentPage="currentPageActive"
+                  TotalPages="totalPagesActive"
+                  OnPageChanged="HandlePageChangeActive"
+                  AfficherAction="true" />
+}
+
+<!-- Emprunts retournés -->
+<h5 class="mt-5">Emprunts retournés</h5>
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else if (!PagedInactiveEmprunts.Any())
+{
+    <p class="alert alert-info">Aucun emprunt retourné.</p>
+}
+else
+{
+    <EmpruntTable PagedEmprunts="PagedInactiveEmprunts"
+                  CurrentPage="currentPageInactive"
+                  TotalPages="totalPagesInactive"
+                  OnPageChanged="HandlePageChangeInactive"
+                  AfficherDateRetourEffective="true"
+                  AfficherAction="false" />
+}
+
+@code {
+    private List<EmpruntDto>? emprunts;
+    private List<EmpruntDto>? activeEmprunts;
+    private List<EmpruntDto>? inactiveEmprunts;
+    private bool isLoading = true;
+    private string? Message;
+    private bool Success;
+
+    private int currentPageActive = 1;
+    private int pageSize = 5;
+    private int totalPagesActive => (int)Math.Ceiling((double)(activeEmprunts?.Count ?? 0) / pageSize);
+    private IEnumerable<EmpruntDto> PagedActiveEmprunts => activeEmprunts?
+        .Skip((currentPageActive - 1) * pageSize)
+        .Take(pageSize) ?? Enumerable.Empty<EmpruntDto>();
+
+    private int currentPageInactive = 1;
+    private int totalPagesInactive => (int)Math.Ceiling((double)(inactiveEmprunts?.Count ?? 0) / pageSize);
+    private IEnumerable<EmpruntDto> PagedInactiveEmprunts => inactiveEmprunts?
+        .Skip((currentPageInactive - 1) * pageSize)
+        .Take(pageSize) ?? Enumerable.Empty<EmpruntDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerEmprunts();
+    }
+
+    private async Task ChargerEmprunts()
+    {
+        try
+        {
+            isLoading = true;
+            emprunts = await Http.GetFromJsonAsync<List<EmpruntDto>>("/api-bibliotheque/emprunts");
+
+            if (emprunts != null)
+            {
+                activeEmprunts = emprunts.Where(e => !e.EstRendu).ToList();
+                inactiveEmprunts = emprunts.Where(e => e.EstRendu).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = GestionErreurs.GererErreur(ex);
+            Success = false;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void HandlePageChangeActive(int page) => currentPageActive = page;
+    private void HandlePageChangeInactive(int page) => currentPageInactive = page;
+}

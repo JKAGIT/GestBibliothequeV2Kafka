@@ -1,0 +1,83 @@
+﻿@using GestBibliotheque.Blazor.Models
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>Nom & Prénoms</th>
+                <th>Titre du Livre</th>
+                <th>Date d'emprunt</th>
+                <th>Date de retour prévue</th>
+                @if (AfficherDateRetourEffective)
+                {
+                    <th>Date de retour effective</th>
+                }
+                else
+                {
+                    <th>Statut</th>
+                }
+                @if (AfficherAction)
+                {
+                    <th>Actions</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var emprunt in PagedEmprunts)
+            {
+                <tr>
+                    <td>@emprunt.NomCompletUsager</td>
+                    <td>@emprunt.TitreLivre</td>
+                    <td>@emprunt.DateDebut.ToString("yyyy-MM-dd")</td>
+                    <td>@emprunt.DateRetourPrevue.ToString("yyyy-MM-dd")</td>
+                    @if (AfficherDateRetourEffective)
+                    {
+                        <td>@(emprunt.DateRetour.HasValue ? emprunt.DateRetour.Value.ToString("yyyy-MM-dd") : "-")</td>
+                    }
+                    else
+                    {
+                        <td>
+                            <span style="color:@(emprunt.EnRetard ? "red" : "green")">
+                                @(emprunt.EnRetard ? "En retard" : "À jour")
+                            </span>
+                        </td>
+                    }
+                    @if (AfficherAction)
+                    {
+                        <td>
+                            <a href="/Emprunt/Modifier-Emprunts/@emprunt.ID" class="btn btn-primary btn-sm me-2">Modifier</a>
+                            <a href="/Emprunt/Details-Emprunts/@emprunt.ID" class="btn btn-info btn-sm me-2">Détails</a>
+                            <a href="/Retour/Ajout-Retours/@emprunt.ID" class="btn btn-warning btn-sm">Retourner le livre</a>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<Pagination CurrentPage="CurrentPage" TotalPages="TotalPages" OnPageChanged="HandlePageChanged" />
+
+@code {
+    [Parameter]
+    public IEnumerable<EmpruntDto> PagedEmprunts { get; set; } = new List<EmpruntDto>();
+
+    [Parameter]
+    public int CurrentPage { get; set; }
+
+    [Parameter]
+    public int TotalPages { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPageChanged { get; set; }
+
+    [Parameter]
+    public bool AfficherDateRetourEffective { get; set; } = false;  // Affichage de la colonne dateRetour (pour les cas retournés).
+
+    [Parameter]
+    public bool AfficherAction { get; set; } = true; // Affichage de la colonne Actions ou pas.
+
+    private void HandlePageChanged(int page)
+    {
+        OnPageChanged.InvokeAsync(page);
+    }
+}

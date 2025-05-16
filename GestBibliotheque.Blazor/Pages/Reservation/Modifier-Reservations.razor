@@ -1,0 +1,167 @@
+﻿@page "/Reservation/Modifier-reservations/{id:guid}"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using CommonLib.GestBibliotheque.Utilitaires
+@using GestBibliotheque.Blazor.Models
+
+<h3 class="text-center mb-4">Modifier une réservation</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(Success ? "alert-success" : "alert-danger")">@Message</div>
+}
+
+@if (reservation == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <EditForm Model="@reservation" OnValidSubmit="ModifierReservation">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="usagerSelect" class="form-label">Sélectionner un usager</label>
+            <InputSelect id="usagerSelect" class="form-select" @bind-Value="selectedUsagerString">
+                <option value="">-- Sélectionner un usager --</option>
+                @foreach (var user in usagers)
+                {
+                    <option value="@user.Id.ToString()">@($"{user.Nom} {user.Prenoms}")</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="livreSelect" class="form-label">Sélectionner un livre</label>
+            <InputSelect id="livreSelect" class="form-select" @bind-Value="selectedLivreString">
+                <option value="">-- Sélectionner un livre --</option>
+                @foreach (var livre in livres)
+                {
+                    <option value="@livre.Id.ToString()">@livre.Titre</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="mb-3">
+            <label for="dateDebut" class="form-label">Date de réservation</label>
+            <InputDate id="dateDebut" @bind-Value="reservation.DateDebut" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label for="dateRetourEstimee" class="form-label">Date de retour estimée</label>
+            <InputDate id="dateRetourEstimee" @bind-Value="reservation.DateRetourEstimee" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+        <button type="button" class="btn btn-secondary" @onclick="Retour">Annuler</button>
+    </EditForm>
+}
+@code {
+    [Parameter] public Guid id { get; set; }
+
+    private ReservationDto? reservation;
+    private string? Message;
+    private bool Success;
+
+    private List<UsagerDto> usagers = new();
+    private List<LivreDto> livres = new();
+
+    private string selectedUsagerString
+    {
+        get => reservation?.IDUsager.ToString() ?? string.Empty;
+        set
+        {
+            if (reservation != null && Guid.TryParse(value, out var guidVal))
+                reservation.IDUsager = guidVal;
+        }
+    }
+
+    private string selectedLivreString
+    {
+        get => reservation?.IDLivre.ToString() ?? string.Empty;
+        set
+        {
+            if (reservation != null && Guid.TryParse(value, out var guidVal))
+                reservation.IDLivre = guidVal;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerUsagers();
+        await ChargerLivres();
+        await ChargerReservation();
+    }
+
+    private async Task ChargerUsagers()
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<UsagerDto>>("/api-bibliotheque/usagers");
+            usagers = result ?? new List<UsagerDto>();
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors du chargement des usagers : {ex.Message}";
+            Success = false;
+        }
+    }
+
+    private async Task ChargerLivres()
+    {
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<LivreDto>>("/api-bibliotheque/livre");
+            livres = result?.Where(l => l.Stock > 0).ToList() ?? new List<LivreDto>();
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors du chargement des livres : {ex.Message}";
+            Success = false;
+        }
+    }
+
+    private async Task ChargerReservation()
+    {
+        try
+        {
+            reservation = await Http.GetFromJsonAsync<ReservationDto>($"/api-bibliotheque/reservation/reservationParId/{id}");
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors du chargement de la réservation : {ex.Message}";
+            Success = false;
+        }
+    }
+
+    private async Task ModifierReservation()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"/api-bibliotheque/reservation/modifier/{id}", reservation);
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Réservation modifiée avec succès.";
+                Success = true;
+                Retour();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Message = $"Échec de la modification : {errorContent}";
+                Success = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors de la modification : {ex.Message}";
+            Success = false;
+        }
+    }
+
+    private void Retour()
+    {
+        Navigation.NavigateTo("/Reservation/reservations");
+    }
+}

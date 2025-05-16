@@ -1,0 +1,63 @@
+﻿@page "/Details-Livres/{id:guid}"
+@using GestBibliotheque.Blazor.Models
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<h3 class="mb-3">Détails du livre</h3>
+
+@if (livre == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <dl class="row">
+        <dt class="col-sm-3">Titre</dt>
+        <dd class="col-sm-9">@livre.Titre</dd>
+
+        <dt class="col-sm-3">Auteur</dt>
+        <dd class="col-sm-9">@livre.Auteur</dd>
+
+        <dt class="col-sm-3">Catégorie</dt>
+        <dd class="col-sm-9">@livre.Libelle</dd>
+
+        <dt class="col-sm-3">Stock</dt>
+        <dd class="col-sm-9">@livre.Stock</dd>
+
+        <dt class="col-sm-3">Disponibilité</dt>
+        <dd class="col-sm-9"> @(livre.EstDisponible ? "Oui" : "Non")</dd>
+
+       
+    </dl>
+
+    <button class="btn btn-secondary" @onclick="RetourListe">Retour</button>
+}
+
+@code {
+    [Parameter]
+    public Guid id { get; set; } 
+
+    private LivreDto? livre = null;
+    private string? Message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            livre = await Http.GetFromJsonAsync<LivreDto>($"/api-bibliotheque/livre/{id}");
+            if (livre == null)
+            {
+                Message = "Erreur : Le livre demandé est introuvable.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur lors du chargement des données : {ex.Message}";
+        }
+    }
+
+    private void RetourListe()
+    {
+        Navigation.NavigateTo("/Livre/livres");
+    }
+}
