@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 
 namespace GestionNotification.Application.Policies
 {
-    public static class RetryPolicy
-    {
-        private const int MaxRetries = 3;
+    //public static class RetryPolicy
+    //{
+    //    private const int MaxRetries = 3;
 
-        public static bool CanRetry(Notification notification)
-        {
-            return notification.Status == NotificationStatus.Echec && notification.RetryCount < MaxRetries;
-        }
-    }
+    //    public static bool CanRetry(Notification notification)
+    //    {
+    //        return notification.Status == NotificationStatus.Echec && notification.RetryCount < MaxRetries;
+    //    }
+    //}
 }
 
 

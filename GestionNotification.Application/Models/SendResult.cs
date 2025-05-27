@@ -11,8 +11,8 @@ namespace GestionNotification.Application.Models
         public bool Success { get; set; }
         public string? ErrorMessage { get; set; }
 
-        public static SendResult Ok() => new SendResult { Success = true };
-        public static SendResult Fail(string message) => new SendResult { Success = false, ErrorMessage = message };
+        //public static SendResult Ok() => new SendResult { Success = true };
+        //public static SendResult Fail(string message) => new SendResult { Success = false, ErrorMessage = message };
     }
 }
 
